@@ -1,0 +1,56 @@
+################################################################################
+# sp_create_graphene_data.lsf
+#
+# This script file creates a set of permittivity data over wavelength for
+# graphene based on the model described in Gao et al. and this data
+# is output to a file (to be imported into FDTD Solutions), and plotted. 
+# 
+# Copyright 2012 Lumerical Solutions Inc
+################################################################################
+
+clear;
+
+# Specify starting and ending wavelength
+start_lambda = 6.25e-6;  
+end_lambda = 14.28e-6;
+
+# number of points to sample between start_lambda and end_lambda
+num = 30;
+
+# set Ef, t (thickness), u (carrier mobility), vf (carrier density) values
+Ef = 0.64*1.602e-19;
+t = 0.5e-9;
+u = 1;
+vf = 10^6;
+
+# Initialize frequency and wavelength vector
+lambda = linspace(start_lambda, end_lambda, num);
+f = c / lambda;
+
+# Calculate the carrier relaxation time
+tao_inv = (e*vf^2)/(u*Ef);
+
+# Calculate conductivity
+sigma = 1i*e^2*Ef/(pi*hbar^2*(2*pi*f+1i*tao_inv));
+
+# Calculate permittivity
+eps_xx = 2.5 + 1i*sigma/(eps0*2*pi*f*t);
+eps_yy = linspace(2.5,2.5,num);
+eps_zz = eps_xx;
+
+# plot real and imaginary parts of permittivity vs wavelength
+plot(lambda*1e6, real(eps_xx), real(eps_yy), real(eps_zz), "wavelength (microns)" , " permittivity");
+legend("real eps_xx", "real eps_yy", "real eps_zz");
+plot(lambda*1e6, imag(eps_xx), imag(eps_yy), imag(eps_zz), "wavelength (microns)" , " permittivity");
+legend("imag eps_xx", "imag eps_yy", "imag eps_zz");
+
+# write the data to a text file, properly formatted for material database import
+fname= "graphene_data_permittivity.txt";
+
+if (fileexists(fname)) { rm(fname); }
+write(fname, "wavelength(m) real_eps_xx imag_eps_xx real_eps_yy imag_eps_yy real_eps_zz imag_eps_zz");
+
+for(i=1:length(f)) {
+  write(fname, num2str(lambda(i))+" "+num2str(real(eps_xx(i)))+" "+num2str(imag(eps_xx(i)))+" "+num2str(real(eps_yy(i)))
+        +" "+num2str(imag(eps_yy(i)))+" "+num2str(real(eps_zz(i)))+" "+ num2str(imag(eps_zz(i))));
+}

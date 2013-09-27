@@ -1,0 +1,42 @@
+#############################################################
+# scriptfile: sp_graphene_ribbons.lsf
+#
+# This file 
+#
+# Copyright 20010, Lumerical Solutions, Inc.
+#############################################################
+
+# Run the sweep
+#runsweep;
+
+# Collect sweep data
+T_dataset=getsweepresult("sweep_period","T");
+lambda=T_dataset.lambda;
+T=T_dataset.T;
+period=getsweepdata("sweep_period","period");
+
+w=1/(lambda*100); # convert to units 1/cm to match plot in reference
+
+# Extract transmission spectrum for each period
+T_300=pinch(T,2,1);
+T_400=pinch(T,2,2);
+T_500=pinch(T,2,3);
+
+# Plot transmission spectrum for each period in one figure
+plot(w,T_300,T_400,T_500,"w (cm^-1)","transmission");
+legend(num2str(period(1)*1e9)+" nm",num2str(period(2)*1e9)+" nm",num2str(period(3)*1e9)+" nm");
+
+#write data to a file
+
+data=[w,T_300,T_400,T_500];
+format long;
+rm("saved_data_graphene_ribbon.dat");
+write("saved_data_graphene_ribbon.dat","Graphene Ribbon\n w T_300 T_400 T_500");
+write("saved_data_graphene_ribbon.dat",num2str(data));
+
+
+
+
+
+
+
